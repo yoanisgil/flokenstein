@@ -1,0 +1,49 @@
+---
+- name: Configure control service node 
+  hosts: all
+  gather_facts: False
+  vars:
+    flocker_directory: /etc/flocker
+    certificate_control_name: "{{ lookup('env', 'FLOCKER_CONTROL_IP') }}"
+    certificate_output_path: /tmp
+
+  tasks:
+    - name: Check cluster key existence
+      stat: path="{{ flocker_directory }}/cluster.key"
+      register: cluster_key_file_check
+
+    - name: Check control service key existence
+      stat: path="{{ flocker_directory }}/cluster.crt"
+      register: control_service_key_check
+
+    - name: Generate cluster certificate
+      shell: flocker-ca initialize jenkins chdir={{ flocker_directory }}
+      when: cluster_key_file_check.stat.exists == False 
+
+    - name: Generate control certificate
+      shell: flocker-ca create-control-certificate {{ certificate_control_name }} chdir={{ flocker_directory }}
+      when: control_service_key_check.stat.exists == False
+      
+    - name: Rename control certificate
+      shell: "mv {{ flocker_directory }}/control-{{ certificate_control_name }}.crt {{ flocker_directory }}/control-service.crt"
+    - name: Rename control certificate private key 
+      shell: "mv {{ flocker_directory }}/control-{{ certificate_control_name }}.key {{ flocker_directory }}/control-service.key"
+
+    - name: Enable services
+      shell: systemctl enable {{ item }}
+      with_items:
+        - flocker-control
+
+
+    - name: Start services
+      shell: systemctl restart {{ item }}
+      with_items:
+        - flocker-control
+
+    - name: Copy cluster certificate
+      shell: cp /etc/flocker/cluster.crt {{certificate_output_path}}/cluster.crt
+
+    - name: Enforce cluster certificate path
+      file: >
+        path={{certificate_output_path}}/cluster.crt
+        mode=0444

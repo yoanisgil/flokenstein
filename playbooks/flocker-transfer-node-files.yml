@@ -1,0 +1,28 @@
+---
+- name: Transfer node files
+  hosts: all
+  gather_facts: False
+  vars:
+    certificate_output_path: /tmp
+    flocker_directory: /etc/flocker
+
+  tasks:
+    - set_fact:
+        certificate_id={{ lookup('env','CERTIFICATE_ID') }}  
+    - name: Copy node certificate
+      shell: cp "{{ certificate_output_path }}/{{ certificate_id }}.crt" {{ flocker_directory }}/node.crt
+    - name: Copy node private key 
+      shell: cp "{{ certificate_output_path }}/{{ certificate_id }}.key" {{ flocker_directory }}/node.key
+    - name: Copy cluster certificate 
+      shell: cp "{{ certificate_output_path }}/cluster.crt" {{ flocker_directory }}/cluster.crt
+    - name: Copy plugin private key
+      shell: cp "{{ certificate_output_path }}/{{ item }}" {{ flocker_directory }}
+      with_items:
+        - plugin.key
+        - plugin.crt
+    - name: Change key permissions
+      shell: "chmod 0600 {{ flocker_directory }}/*.key"
+
+
+
+

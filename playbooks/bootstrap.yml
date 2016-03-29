@@ -1,0 +1,19 @@
+---
+- name: Initial packages setup 
+  hosts: all
+  gather_facts: False
+
+  tasks:
+    - name: Install htop
+      apt: >
+        package=htop
+        state=present
+        update_cache=yes
+    - name: Install tree
+      apt: >
+        package=tree
+        state=present
+    - name: Install jq
+      apt: >
+        package=jq
+        state=present

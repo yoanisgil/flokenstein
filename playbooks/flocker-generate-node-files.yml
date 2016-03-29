@@ -1,0 +1,31 @@
+---
+- name: Initial flocker setup
+  hosts: all
+  gather_facts: False
+  vars:
+    certificate_output_path: /tmp
+    flocker_directory: /etc/flocker
+
+  tasks:
+    - name: Generate node certificate
+      shell: flocker-ca create-node-certificate --outputpath={{ certificate_output_path }} chdir={{ flocker_directory }}
+      register: create_node_certificate_output
+    - set_fact:
+            certificate_id={{ create_node_certificate_output.stdout[create_node_certificate_output.stdout.index('Created'):create_node_certificate_output.stdout.index('.')].split(' ')[1] }}
+    - name: Create node certificate output
+      debug: var=certificate_id
+    - name: Ensure plugin certificate is present
+      shell: test -f {{ flocker_directory }}/plugin.key || flocker-ca create-api-certificate plugin chdir={{ flocker_directory }}
+    - name: Copy plugin files to temporary folder
+      shell: cp {{ flocker_directory}}/plugin* {{ certificate_output_path }} chdir={{ flocker_directory }}
+    - name: Set node/plugin permissions
+      file: >
+        path={{ item }}
+        mode=0444
+      with_items:
+        - "{{ certificate_output_path }}/{{ certificate_id }}.crt"
+        - "{{ certificate_output_path }}/{{ certificate_id }}.key"
+        - "{{ certificate_output_path }}/plugin.key"
+        - "{{ certificate_output_path }}/plugin.crt"
+
+

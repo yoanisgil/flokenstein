@@ -1,0 +1,41 @@
+---
+- name: Configure Flocker agent 
+  hosts: all
+  gather_facts: False
+  vars:
+    agent_configuration: |
+        {
+          "version": 1,
+          "control-service": {
+            "hostname": "{{ lookup('env', 'FLOCKER_CONTROL_IP') }}",
+            "port": 4524
+          },
+          "dataset": {
+            "backend": "aws",
+            "region": "{{ lookup('env', 'AWS_REGION') }}",
+            "zone": "{{ lookup('env', 'AWS_ZONE') }}",
+            "access_key_id": "{{ lookup('env', 'AWS_ACCESS_KEY_ID')  }}",
+            "secret_access_key": "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+          }
+        }
+    flocker_directory: /etc/flocker
+
+  tasks:
+    - name: Create intermediate JSON
+      copy: >
+         content="{{ agent_configuration }}"
+         dest=/tmp/agent.json
+    - name: Generate agent YML file
+      shell: cat /tmp/agent.json  |  sed s/\'/\"/g | python -c 'import sys, yaml, json; yaml.safe_dump(json.load(sys.stdin), sys.stdout, default_flow_style=False)' > "{{ flocker_directory }}/agent.yml"
+    - name: Enable services
+      shell: systemctl enable {{ item }}
+      with_items:
+        - flocker-dataset-agent
+        - flocker-container-agent
+        - flocker-docker-plugin
+    - name: Start services
+      shell: systemctl restart {{ item }}
+      with_items:
+        - flocker-dataset-agent
+        - flocker-container-agent
+        - flocker-docker-plugin

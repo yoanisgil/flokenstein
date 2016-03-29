@@ -1,0 +1,48 @@
+---
+- name: Initial flocker setup
+  hosts: all
+  gather_facts: False
+  vars:
+    buildbot_700: |
+        Package: * 
+        Pin: origin clusterhq-archive.s3.amazonaws.com
+        Pin-Priority: 700
+    flocker_version: Flocker-1.10.2-py2-none-any.whl
+    certificate_output_path: /tmp
+
+  tasks:
+    - name: Add Flocker repository
+      apt_repository: > 
+        repo="deb https://clusterhq-archive.s3.amazonaws.com/ubuntu/15.10/$(ARCH) /"
+        state=present
+    - name: Define ClusterHQ repo priority
+      copy: >
+         content="{{ buildbot_700 }}"
+         dest=/etc/apt/preferences.d/buildbot-700
+    - name: Install packages
+      apt: >
+        package={{ item }}
+        state=present
+        update_cache=yes
+        force=yes
+      with_items:
+        - apt-transport-https
+        - software-properties-common
+        - clusterhq-flocker-node 
+        - clusterhq-flocker-docker-plugin 
+        - clusterhq-flocker-cli
+        - gcc 
+        - libffi-dev 
+        - libssl-dev
+        - python2.7 
+        - python2.7-dev 
+        - python-pip
+    - name: Install Flocker from PyPi
+      pip: >
+        name=https://clusterhq-archive.s3.amazonaws.com/python/{{flocker_version}}
+    - name: Ensure /etc/flocker is present
+      file: >
+        path=/etc/flocker
+        state=directory
+        mode=0700
+
