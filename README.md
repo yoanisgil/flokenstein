@@ -50,7 +50,7 @@ With the Swarm cluster in place we can now start provisiong nodes. First intsall
 
 ```
 docker-compose run -e constraint:node==swarm-master --rm provision playbooks/bootstrap.yml
-dddocker-compose run -e constraint:node==swarm-node-01 --rm provision playbooks/bootstrap.yml
+docker-compose run -e constraint:node==swarm-node-01 --rm provision playbooks/bootstrap.yml
 ```
 
 - Install Flocker software:
@@ -77,10 +77,10 @@ eth0      Link encap:Ethernet  HWaddr 12:26:ba:ed:52:c3
 
 ```
 
-- Configure ```FLOCKER_CONTROL_IP``` environment variable in  the ```docker-compose.yml``` file using the IP address from the command above:
+- Export the IP address from the step above as an environment variable:
 
 ```
-cp docker-compose.yml.dist docker-compose.yml # and then replace FLOCKER_CONTROL_IP
+export FLOCKER_CONTROL_IP=172.31.51.42
 ```
 
 
@@ -97,9 +97,11 @@ docker-compose run -e constraint:node==swarm-master --rm provision playbooks/flo
 ./copy-node-certifica.sh swarm-master swarm-master
 ```
 
-- Configure the flocker agent (before runnign the command above make sure you have configured all the AWS_* environment variables in the ```docker-compose.yml`` file):
+- Configure the flocker agent:
 
 ```
+export AWS_REGION=us-east-1
+export AWS_ZONE=us-east-1a
 docker-compose run -e constraint:node==swarm-master --rm provision playbooks/flocker-configure-agent.yml
 ```
 
@@ -107,6 +109,7 @@ At this point you should be able to create your very first Flocker volume. Let's
 
 ```
 docker-machine ssh swarm-master
+sudo bash
 docker run -v apples:/data --volume-driver flocker busybox sh -c "echo hello > /data/file.txt"
 ```
 
@@ -143,6 +146,8 @@ docker-compose run -e constraint:node==swarm-node-01 --rm provision playbooks/fl
 and test:
 
 ```
+docker-machine ssh swarm-node-01
+sudo bash
 docker run -v apples:/data --volume-driver flocker busybox sh -c "cat /data/file.txt"
 ```
 

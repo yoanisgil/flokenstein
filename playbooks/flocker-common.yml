@@ -15,10 +15,12 @@
       apt_repository: > 
         repo="deb https://clusterhq-archive.s3.amazonaws.com/ubuntu/15.10/$(ARCH) /"
         state=present
+
     - name: Define ClusterHQ repo priority
       copy: >
          content="{{ buildbot_700 }}"
          dest=/etc/apt/preferences.d/buildbot-700
+
     - name: Install packages
       apt: >
         package={{ item }}
@@ -37,9 +39,11 @@
         - python2.7 
         - python2.7-dev 
         - python-pip
+
     - name: Install Flocker from PyPi
       pip: >
         name=https://clusterhq-archive.s3.amazonaws.com/python/{{flocker_version}}
+
     - name: Ensure /etc/flocker is present
       file: >
         path=/etc/flocker
