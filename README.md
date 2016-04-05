@@ -77,6 +77,11 @@ eth0      Link encap:Ethernet  HWaddr 12:26:ba:ed:52:c3
 
 ```
 
+- Make sure ports ```4523``` and ```4524``` are accesible for machine inside the Swarm cluster. The final configuration should look like:
+
+![Inbound ports config for the docker-machine security group](https://raw.githubusercontent.com/yoanisgil/flokenstein/master/aws-security-group-config.png)
+
+
 - Export the IP address from the step above as an environment variable:
 
 ```
