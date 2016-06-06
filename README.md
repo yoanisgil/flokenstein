@@ -22,7 +22,8 @@ docker-machine create --driver amazonec2 kvstore
 ```
 eval $(docker-machine env kvstore)
 export KV_IP=$(docker-machine ip kvstore)
-docker run -d -p 8500:8500 -h consul --restart=always progrium/consul -server -bootstrap
+docker-machine ssh kvstore
+sudo docker run -d -p 8500:8500 -h consul --restart=always progrium/consul -server -bootstrap
 ```
 
 - Create an instance for running the Swarm master:
