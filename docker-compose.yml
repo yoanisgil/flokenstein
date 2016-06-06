@@ -1,0 +1,11 @@
+provision:
+    image: yoanisgil/ansible-provision
+    net: host
+    volumes:
+        - /root/.ssh:/hostssh
+    environment:
+        - FLOCKER_CONTROL_IP=${FLOCKER_CONTROL_IP}
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        - AWS_REGION=${AWS_REGION}
+        - AWS_ZONE=${AWS_ZONE}
